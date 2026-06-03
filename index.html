@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Iotoria - Premium Motor & Suhu Control</title>
-  
+
   <!-- Socket.IO & Chart.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap"
+    rel="stylesheet">
 
   <style>
     :root {
@@ -21,21 +24,21 @@
       --glass-bg-hover: rgba(22, 36, 66, 0.6);
       --glass-border: rgba(255, 255, 255, 0.08);
       --glass-border-active: rgba(30, 144, 255, 0.4);
-      
+
       /* Colors */
       --primary: #00f2fe;
       --primary-glow: rgba(0, 242, 254, 0.3);
       --secondary: #4facfe;
-      
+
       --success: #00e676;
       --success-glow: rgba(0, 230, 118, 0.25);
-      
+
       --warning: #ffb300;
       --warning-glow: rgba(255, 179, 0, 0.25);
-      
+
       --danger: #ff1744;
       --danger-glow: rgba(255, 23, 68, 0.3);
-      
+
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -98,8 +101,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* HEADER */
@@ -181,9 +191,21 @@
     }
 
     @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.5; }
-      50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px currentColor; }
-      100% { transform: scale(0.95); opacity: 0.5; }
+      0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+        box-shadow: 0 0 8px currentColor;
+      }
+
+      100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+      }
     }
 
     /* GRID LAYOUT */
@@ -231,11 +253,25 @@
     }
 
     /* Column Spans */
-    .c4 { grid-column: span 4; }
-    .c5 { grid-column: span 5; }
-    .c6 { grid-column: span 6; }
-    .c7 { grid-column: span 7; }
-    .c12 { grid-column: span 12; }
+    .c4 {
+      grid-column: span 4;
+    }
+
+    .c5 {
+      grid-column: span 5;
+    }
+
+    .c6 {
+      grid-column: span 6;
+    }
+
+    .c7 {
+      grid-column: span 7;
+    }
+
+    .c12 {
+      grid-column: span 12;
+    }
 
     /* TEMPERATURE CIRCULAR GAUGE */
     .gauge-wrapper {
@@ -264,7 +300,8 @@
       stroke: var(--success);
       stroke-width: 12;
       stroke-linecap: round;
-      stroke-dasharray: 502; /* 2 * PI * r (r=80) */
+      stroke-dasharray: 502;
+      /* 2 * PI * r (r=80) */
       stroke-dashoffset: 502;
       transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
     }
@@ -370,8 +407,13 @@
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .motor-status-text {
@@ -617,8 +659,15 @@
     }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-5px); }
-      to { opacity: 1; transform: translateX(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .log-time {
@@ -635,10 +684,29 @@
       flex-shrink: 0;
     }
 
-    .badge-mqtt { background: rgba(0, 242, 254, 0.15); color: var(--primary); border: 1px solid var(--primary); }
-    .badge-sys { background: rgba(255, 255, 255, 0.08); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.2); }
-    .badge-motor { background: rgba(0, 230, 118, 0.15); color: var(--success); border: 1px solid var(--success); }
-    .badge-alert { background: rgba(255, 23, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-mqtt {
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .badge-sys {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-motor {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .badge-alert {
+      background: rgba(255, 23, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
 
     .log-msg {
       word-break: break-all;
@@ -665,8 +733,15 @@
     }
 
     @keyframes alertSlide {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .alert-box.show {
@@ -692,17 +767,185 @@
       color: #ff8a80;
     }
 
+    /* RESPONSIVE DESIGN & HARMONIZATION */
     @media (max-width: 1024px) {
-      .c4, .c5, .c6, .c7 { grid-column: span 6; }
+      .c4 {
+        grid-column: span 6;
+      }
+      .c5 {
+        grid-column: span 6;
+      }
+      .c7 {
+        grid-column: span 12;
+      }
+      .c12 {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      header {
+        padding: 15px;
+      }
+      .card {
+        padding: 20px;
+      }
+      .gauge-svg {
+        width: 160px;
+        height: 160px;
+      }
+      .gauge-temp {
+        font-size: 38px;
+      }
     }
 
     @media (max-width: 640px) {
-      .c4, .c5, .c6, .c7 { grid-column: span 12; }
-      .form-grid { grid-template-columns: 1fr; }
-      .form-group.full-width { grid-column: span 1; }
+      body {
+        padding: 10px;
+      }
+      header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 15px;
+      }
+      .logo-container {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .connection-badge {
+        width: 100%;
+        justify-content: center;
+      }
+      .c4, .c5, .c6, .c7, .c12 {
+        grid-column: span 12;
+      }
+      .card {
+        padding: 15px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+      .gauge-svg {
+        width: 150px;
+        height: 150px;
+      }
+      .gauge-temp {
+        font-size: 36px;
+      }
+      .temp-stats {
+        gap: 8px;
+      }
+    }
+
+    /* ALERT POPUP MODAL STYLE */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(8, 15, 30, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: rgba(20, 10, 20, 0.85);
+      border: 2px solid var(--danger);
+      border-radius: 24px;
+      padding: 30px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 0 35px rgba(255, 23, 68, 0.4), var(--card-shadow);
+      text-align: center;
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.show .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .modal-icon {
+      font-size: 48px;
+      animation: pulseAlert 1s infinite alternate;
+    }
+
+    @keyframes pulseAlert {
+      0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 23, 68, 0.5)); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 20px var(--danger)); }
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--danger);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .modal-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 25px;
+      font-weight: 500;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 12px 35px;
+      border: none;
+      background: linear-gradient(135deg, var(--danger) 0%, #b30000 100%);
+      color: white;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4);
+      transition: all 0.3s;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 23, 68, 0.6);
     }
   </style>
 </head>
+
 <body>
 
   <!-- Background Glowing Blobs -->
@@ -712,7 +955,7 @@
   </div>
 
   <div class="container">
-    
+
     <!-- HEADER -->
     <header>
       <div class="logo-container">
@@ -730,7 +973,7 @@
 
     <!-- MAIN GRID -->
     <div class="grid">
-      
+
       <!-- ALERT BOX -->
       <div class="alert-box" id="alertContainer">
         <div class="alert-icon-wrapper">⚠️</div>
@@ -740,7 +983,9 @@
       <!-- SUHU (TEMPERATURE) CARD -->
       <div class="card c4">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+          </svg>
           Suhu Sensor
         </div>
         <div class="gauge-wrapper">
@@ -768,20 +1013,25 @@
       <!-- MOTOR CONTROL CARD -->
       <div class="card c4">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2v20M2 12h20" />
+          </svg>
           Motor Control
         </div>
         <div class="motor-wrapper">
           <div class="motor-fan-box" id="fanIndicator">
             <!-- 3D Fan SVG -->
             <svg class="fan-svg" viewBox="0 0 24 24">
-              <path d="M12,11A1,1,0,1,0,13,12,1,1,0,0,0,12,11Zm0-9a2,2,0,0,0-2,2V8.1a4,4,0,0,0,4,0V4A2,2,0,0,0,12,2Zm8,8H15.9a4,4,0,0,0,0,4H20a2,2,0,0,0,0-4ZM8.1,10H4a2,2,0,0,0,0,4H8.1a4,4,0,0,0,0-4Zm3.9,5.9a4,4,0,0,0-2,0V20a2,2,0,0,0,4,0V15.9A4,4,0,0,0,12,15.9Z"/>
+              <path
+                d="M12,11A1,1,0,1,0,13,12,1,1,0,0,0,12,11Zm0-9a2,2,0,0,0-2,2V8.1a4,4,0,0,0,4,0V4A2,2,0,0,0,12,2Zm8,8H15.9a4,4,0,0,0,0,4H20a2,2,0,0,0,0-4ZM8.1,10H4a2,2,0,0,0,0,4H8.1a4,4,0,0,0,0-4Zm3.9,5.9a4,4,0,0,0-2,0V20a2,2,0,0,0,4,0V15.9A4,4,0,0,0,12,15.9Z" />
             </svg>
           </div>
-          
+
           <div style="text-align: center;">
             <div class="motor-status-text" id="motorStateText">STATUS: OFF</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Uptime: <span id="uptime">--:--</span></div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Uptime: <span
+                id="uptime">--:--</span></div>
           </div>
 
           <div class="toggle-container">
@@ -796,29 +1046,35 @@
       <!-- THRESHOLD CARD -->
       <div class="card c4">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
+          </svg>
           Threshold Control
         </div>
         <div class="slider-box">
           <div class="slider-header">
             <span class="form-label">Batas Threshold</span>
-            <div class="slider-value"><span id="thresholdNum">30</span><span style="font-size: 14px; color: var(--text-muted);">°C</span></div>
+            <div class="slider-value"><span id="thresholdNum">30</span><span
+                style="font-size: 14px; color: var(--text-muted);">°C</span></div>
           </div>
-          <input type="range" class="custom-range" id="thresholdSlider" min="20" max="80" value="30" oninput="changeThreshold(this.value)" disabled>
+          <input type="range" class="custom-range" id="thresholdSlider" min="20" max="80" value="30"
+            oninput="changeThreshold(this.value)" disabled>
           <div class="slider-labels">
             <span>20°C</span>
             <span>50°C</span>
             <span>80°C</span>
           </div>
-          
-          <div style="margin-top: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 12px; border: 1px solid var(--glass-border);">
+
+          <div
+            style="margin-top: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 12px; border: 1px solid var(--glass-border);">
             <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
               <span style="color: var(--text-muted);">Jarak ke Threshold:</span>
               <span id="tempGap" style="font-weight: bold; font-family: 'Roboto Mono', monospace;">--</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 12px;">
               <span style="color: var(--text-muted);">Total Alarm Terpicu:</span>
-              <span id="alertCount" style="font-weight: bold; color: var(--warning); font-family: 'Roboto Mono', monospace;">0</span>
+              <span id="alertCount"
+                style="font-weight: bold; color: var(--warning); font-family: 'Roboto Mono', monospace;">0</span>
             </div>
           </div>
         </div>
@@ -827,7 +1083,9 @@
       <!-- REAL-TIME CHART -->
       <div class="card c7">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+          </svg>
           Riwayat Grafik Suhu Realtime
         </div>
         <div class="chart-container">
@@ -838,7 +1096,9 @@
       <!-- MQTT & LOGS CONTAINER -->
       <div class="card c5">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
           Logs & Aktivitas
         </div>
         <div class="log-panel">
@@ -855,7 +1115,11 @@
       <!-- CONFIGURATION PANELS -->
       <div class="card c12">
         <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
           Konfigurasi Portal & MQTT
         </div>
         <div class="form-grid">
@@ -872,7 +1136,9 @@
             <input type="text" class="form-control" id="mqttTopicPrefix" value="rosyid">
           </div>
           <div class="form-group full-width">
-            <button class="action-btn" id="btnConnect" onclick="toggleConnection()" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #0d1527; font-weight: 700; border: none;">Koneksikan ke Portal</button>
+            <button class="action-btn" id="btnConnect" onclick="toggleConnection()"
+              style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #0d1527; font-weight: 700; border: none;">Koneksikan
+              ke Portal</button>
           </div>
         </div>
       </div>
@@ -886,15 +1152,16 @@
     let isConnected = false;
     let motorOn = false;
     let systemMode = 'AUTO'; // Default AUTO
-    
+
     let currentTemp = null;
     let minTemp = null;
     let maxTemp = null;
     let threshold = 30.0;
-    
+
     let alertCount = 0;
     let motorStartTime = null;
     let uptimeTimer = null;
+    let isOverheated = false;
 
     // Load credentials from localStorage if available
     window.addEventListener('DOMContentLoaded', () => {
@@ -993,7 +1260,7 @@
           mqttClient.emit('join_topic', topics.threshold);
           mqttClient.emit('join_topic', topics.status);
           mqttClient.emit('join_topic', topics.alert);
-          
+
           addLog('sys', `Subscribed ke topic: ${prefix}/*`);
 
           // Enable controls
@@ -1037,12 +1304,12 @@
       if (mqttClient) {
         try {
           mqttClient.disconnect();
-        } catch(e){}
+        } catch (e) { }
         mqttClient = null;
       }
       isConnected = false;
       updateConnUI(false);
-      
+
       // Disable interactive controls
       document.getElementById('thresholdSlider').disabled = true;
       document.getElementById('btnActionMotor').disabled = true;
@@ -1081,7 +1348,7 @@
         if (!isNaN(val)) {
           updateTemperature(val);
         }
-      } 
+      }
       else if (topic === topics.threshold) {
         const val = parseFloat(msg);
         if (!isNaN(val)) {
@@ -1091,16 +1358,20 @@
           updateGapInfo();
           addLog('sys', `Batas suhu threshold diperbarui: ${val}°C`);
         }
-      } 
-      else if (topic === topics.status) {
+      }
+      else if (topic === topics.status || topic === topics.motor) {
         const uMsg = msg.toUpperCase();
         if (uMsg === 'AUTO' || uMsg === 'MANUAL') {
           updateSystemMode(uMsg);
         } else {
           const on = (uMsg === 'ON' || uMsg === '1');
           updateMotorState(on);
+          // If we receive ON or OFF on the motor control topic directly, we are in MANUAL mode
+          if (topic === topics.motor) {
+            updateSystemMode('MANUAL');
+          }
         }
-      } 
+      }
       else if (topic === topics.alert) {
         addLog('alert', msg);
         triggerAlert(msg);
@@ -1135,10 +1406,16 @@
       // Gauge Color transitions based on critical temperature
       if (val >= threshold) {
         gauge.style.stroke = 'var(--danger)';
+        if (!isOverheated) {
+          isOverheated = true;
+          triggerAlert(`Alarm: Suhu kritis terdeteksi! Saat ini ${val.toFixed(1)}°C (Batas: ${threshold}°C)`);
+        }
       } else if (val >= threshold - 3) {
         gauge.style.stroke = 'var(--warning)';
+        isOverheated = false;
       } else {
         gauge.style.stroke = 'var(--success)';
+        isOverheated = false;
       }
 
       // Local AUTO mode backup logic
@@ -1154,9 +1431,9 @@
       if (currentTemp === null) return;
       const gap = threshold - currentTemp;
       const gapEl = document.getElementById('tempGap');
-      
+
       gapEl.textContent = (gap >= 0 ? '+' : '') + gap.toFixed(1) + '°C';
-      
+
       if (gap <= 0) {
         gapEl.style.color = 'var(--danger)';
       } else if (gap <= 3) {
@@ -1179,7 +1456,7 @@
         text.textContent = "STATUS: RUNNING";
         text.classList.add('active');
         btn.textContent = "Matikan Motor";
-        
+
         // Restore start time from localStorage or save a new one
         let savedStartTime = localStorage.getItem('motor_start_time');
         if (!savedStartTime) {
@@ -1188,14 +1465,14 @@
         }
         motorStartTime = parseInt(savedStartTime);
         startUptime();
-        
+
         addLog('motor', 'Motor berputar (ON).');
       } else {
         fan.classList.remove('active');
         text.textContent = "STATUS: OFF";
         text.classList.remove('active');
         btn.textContent = "Nyalakan Motor";
-        
+
         // Remove start time from localStorage when motor is turned OFF
         localStorage.removeItem('motor_start_time');
         stopUptime();
@@ -1206,7 +1483,7 @@
     function publishMQTT(topic, message) {
       const token = document.getElementById('mqttToken').value.trim();
       const host = document.getElementById('mqttHost').value.trim() || 'portal.iotoria.web.id';
-      
+
       if (!token) {
         addLog('alert', 'Error: Auth Token JWT diperlukan untuk mengirim perintah!');
         return;
@@ -1227,18 +1504,20 @@
         body: JSON.stringify({
           topic: topic,
           message: message.toString(),
-          qos: 1
+          qos: 1,
+          retain: true,
+          retained: true
         })
       })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('HTTP status ' + res.status);
-        }
-        addLog('mqtt', `Mengirim perintah ke ${topic} → ${message}`);
-      })
-      .catch(err => {
-        addLog('alert', `Gagal mengirim perintah: ${err.message}`);
-      });
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('HTTP status ' + res.status);
+          }
+          addLog('mqtt', `Mengirim perintah ke ${topic} → ${message}`);
+        })
+        .catch(err => {
+          addLog('alert', `Gagal mengirim perintah: ${err.message}`);
+        });
     }
 
     function toggleMotor() {
@@ -1259,7 +1538,7 @@
         autoBtn.classList.add('active');
         manualBtn.classList.remove('active');
         addLog('sys', 'Sistem berjalan di Mode: AUTO');
-        
+
         // If temperature is known, evaluate motor state immediately
         if (currentTemp !== null) {
           updateMotorState(currentTemp < threshold);
@@ -1297,14 +1576,14 @@
     function changeThreshold(value) {
       document.getElementById('thresholdNum').textContent = value;
       threshold = parseFloat(value);
-      
+
       // If in AUTO mode, evaluate motor state immediately
       if (systemMode === 'AUTO' && currentTemp !== null) {
         updateMotorState(currentTemp < threshold);
       }
-      
+
       if (!isConnected) return;
-      
+
       const topics = getMqttTopics();
       publishMQTT(topics.threshold, value.toString());
     }
@@ -1316,10 +1595,13 @@
 
       const container = document.getElementById('alertContainer');
       const alertMsg = document.getElementById('alertMessage');
-      
+
       alertMsg.textContent = message;
       container.classList.add('show');
       
+      // Show prominent modal popup
+      showPopUpModal(message);
+
       // Auto hide alarm box after 6 seconds
       setTimeout(() => {
         container.classList.remove('show');
@@ -1341,15 +1623,15 @@
       const hours = Math.floor(elapsed / 3600);
       const mins = Math.floor((elapsed % 3600) / 60);
       const secs = elapsed % 60;
-      
+
       if (hours > 0) {
-        document.getElementById('uptime').textContent = 
-          String(hours).padStart(2, '0') + ':' + 
-          String(mins).padStart(2, '0') + ':' + 
+        document.getElementById('uptime').textContent =
+          String(hours).padStart(2, '0') + ':' +
+          String(mins).padStart(2, '0') + ':' +
           String(secs).padStart(2, '0');
       } else {
-        document.getElementById('uptime').textContent = 
-          String(mins).padStart(2, '0') + ':' + 
+        document.getElementById('uptime').textContent =
+          String(mins).padStart(2, '0') + ':' +
           String(secs).padStart(2, '0');
       }
     }
@@ -1370,13 +1652,13 @@
       if (empty) empty.remove();
 
       const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-      
+
       const item = document.createElement('div');
       item.className = 'log-item';
-      
+
       let badgeClass = 'badge-sys';
       let badgeText = 'system';
-      
+
       if (type === 'mqtt') { badgeClass = 'badge-mqtt'; badgeText = 'mqtt'; }
       else if (type === 'motor') { badgeClass = 'badge-motor'; badgeText = 'motor'; }
       else if (type === 'alert') { badgeClass = 'badge-alert'; badgeText = 'alert'; }
@@ -1386,7 +1668,7 @@
         <span class="log-badge ${badgeClass}">${badgeText}</span>
         <span class="log-msg">${message}</span>
       `;
-      
+
       logList.insertBefore(item, logList.firstChild);
 
       // Cap logs at 30 items
@@ -1402,7 +1684,7 @@
 
     // ── CHART.JS SYSTEM ──────────────────────────────────────
     const ctx = document.getElementById('realtimeChart').getContext('2d');
-    
+
     // Gradient decoration for Chart
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
@@ -1463,7 +1745,7 @@
 
     function appendChartData(temp) {
       const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      
+
       chart.data.labels.push(time);
       chart.data.datasets[0].data.push(temp);
       chart.data.datasets[1].data.push(threshold);
@@ -1477,6 +1759,39 @@
 
       chart.update('none'); // Update without full animation for performance
     }
+
+    function showPopUpModal(message) {
+      const modal = document.getElementById('alertModal');
+      const modalMsg = document.getElementById('modalAlertMessage');
+      if (modal && modalMsg) {
+        modalMsg.textContent = message;
+        modal.classList.add('show');
+      }
+    }
+
+    function closeAlertModal() {
+      const modal = document.getElementById('alertModal');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    }
   </script>
+
+  <!-- DYNAMIC POPUP MODAL -->
+  <div class="modal-overlay" id="alertModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon">🚨</div>
+        <div class="modal-title">PERINGATAN KRITIS</div>
+      </div>
+      <div class="modal-body" id="modalAlertMessage">
+        Suhu terdeteksi melebihi batas threshold!
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeAlertModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>
