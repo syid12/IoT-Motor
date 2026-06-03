@@ -461,6 +461,20 @@
       box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
     }
 
+    #btnPowerOff.active {
+      background: linear-gradient(135deg, var(--danger) 0%, #b30000 100%);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 15px var(--danger-glow);
+    }
+
+    #btnPowerOn.active {
+      background: linear-gradient(135deg, var(--success) 0%, #00b359 100%);
+      color: #0d1527;
+      font-weight: 700;
+      box-shadow: 0 4px 15px var(--success-glow);
+    }
+
     .action-btn {
       width: 100%;
       padding: 12px;
@@ -1085,6 +1099,12 @@
                 id="uptime">--:--</span></div>
           </div>
 
+          <!-- Power Utama Switch -->
+          <div class="toggle-container" style="margin-bottom: 10px;">
+            <button class="toggle-btn" id="btnPowerOff" onclick="sendPower('OFF')">Power OFF</button>
+            <button class="toggle-btn" id="btnPowerOn" onclick="sendPower('ON')">Power ON</button>
+          </div>
+
           <div class="toggle-container">
             <button class="toggle-btn active" id="btnModeAuto" onclick="sendMode('AUTO')">Auto</button>
             <button class="toggle-btn" id="btnModeManual" onclick="sendMode('MANUAL')">Manual</button>
@@ -1203,6 +1223,7 @@
     let isConnected = false;
     let motorOn = false;
     let systemMode = 'AUTO'; // Default AUTO
+    let systemPower = false; // Default OFF
 
     let currentTemp = null;
     let minTemp = null;
@@ -1234,6 +1255,14 @@
         updateSystemMode(savedMode);
       }
 
+      // Restore system power if saved, default to false (OFF)
+      const savedPower = localStorage.getItem('system_power');
+      if (savedPower) {
+        updateSystemPower(savedPower === 'ON');
+      } else {
+        updateSystemPower(false);
+      }
+
       // Restore motor state if it was running
       const savedStartTime = localStorage.getItem('motor_start_time');
       if (savedStartTime) {
@@ -1252,7 +1281,8 @@
         motor: `${prefix}/motor`,
         threshold: `${prefix}/threshold`,
         status: `${prefix}/status`,
-        alert: `${prefix}/alert`
+        alert: `${prefix}/alert`,
+        power: `${prefix}/power`
       };
     }
 
@@ -1311,6 +1341,7 @@
           mqttClient.emit('join_topic', topics.threshold);
           mqttClient.emit('join_topic', topics.status);
           mqttClient.emit('join_topic', topics.alert);
+          mqttClient.emit('join_topic', topics.power);
 
           addLog('sys', `Subscribed ke topic: ${prefix}/*`);
 
@@ -1427,6 +1458,11 @@
         addLog('alert', msg);
         triggerAlert(msg);
       }
+      else if (topic === topics.power) {
+        const uMsg = msg.toUpperCase();
+        const on = (uMsg === 'ON' || uMsg === '1');
+        updateSystemPower(on);
+      }
     }
 
     // ── UPDATE SUHU & VISUAL GAUGE ──────────────────────────
@@ -1471,7 +1507,11 @@
 
       // Local AUTO mode backup logic
       if (systemMode === 'AUTO') {
-        updateMotorState(val < threshold);
+        if (systemPower) {
+          updateMotorState(val < threshold);
+        } else {
+          updateMotorState(false);
+        }
       }
 
       updateGapInfo();
@@ -1577,6 +1617,38 @@
     }
 
     // ── MODE STATE CONTROL (AUTO / MANUAL) ───────────────────
+    // ── POWER STATE CONTROL (ON / OFF) ───────────────────────
+    function updateSystemPower(on) {
+      systemPower = on;
+      localStorage.setItem('system_power', on ? 'ON' : 'OFF');
+      const btnOff = document.getElementById('btnPowerOff');
+      const btnOn = document.getElementById('btnPowerOn');
+
+      if (on) {
+        btnOn.classList.add('active');
+        btnOff.classList.remove('active');
+        addLog('sys', 'Power Utama: ON');
+        
+        // If in AUTO mode, evaluate temperature immediately
+        if (systemMode === 'AUTO' && currentTemp !== null) {
+          updateMotorState(currentTemp < threshold);
+        }
+      } else {
+        btnOff.classList.add('active');
+        btnOn.classList.remove('active');
+        addLog('sys', 'Power Utama: OFF');
+        updateMotorState(false);
+      }
+      updateButtonStates();
+    }
+
+    function sendPower(state) {
+      if (!isConnected) return;
+      const topics = getMqttTopics();
+      publishMQTT(topics.power, state);
+    }
+
+    // ── MODE STATE CONTROL (AUTO / MANUAL) ───────────────────
     function updateSystemMode(mode) {
       systemMode = mode;
       localStorage.setItem('system_mode', mode);
@@ -1590,7 +1662,11 @@
 
         // If temperature is known, evaluate motor state immediately
         if (currentTemp !== null) {
-          updateMotorState(currentTemp < threshold);
+          if (systemPower) {
+            updateMotorState(currentTemp < threshold);
+          } else {
+            updateMotorState(false);
+          }
         }
       } else {
         autoBtn.classList.remove('active');
@@ -1614,7 +1690,7 @@
 
     function updateButtonStates() {
       const motorBtn = document.getElementById('btnActionMotor');
-      if (isConnected && systemMode === 'MANUAL') {
+      if (isConnected && systemPower && systemMode === 'MANUAL') {
         motorBtn.disabled = false;
       } else {
         motorBtn.disabled = true;
