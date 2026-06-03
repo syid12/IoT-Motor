@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iotoria - Premium Motor & Suhu Control</title>
+  
+  <!-- MQTT & Chart.js CDN -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top right, #101b33 0%, #080f1e 100%);
+      --glass-bg: rgba(16, 26, 48, 0.45);
+      --glass-bg-hover: rgba(22, 36, 66, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-active: rgba(30, 144, 255, 0.4);
+      
+      /* Colors */
+      --primary: #00f2fe;
+      --primary-glow: rgba(0, 242, 254, 0.3);
+      --secondary: #4facfe;
+      
+      --success: #00e676;
+      --success-glow: rgba(0, 230, 118, 0.25);
+      
+      --warning: #ffb300;
+      --warning-glow: rgba(255, 179, 0, 0.25);
+      
+      --danger: #ff1744;
+      --danger-glow: rgba(255, 23, 68, 0.3);
+      
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    /* Background decorative blobs */
+    .bg-blobs {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+    }
+
+    .blob-1 {
+      top: -10%;
+      right: 10%;
+      width: 400px;
+      height: 400px;
+      background: var(--primary);
+    }
+
+    .blob-2 {
+      bottom: -10%;
+      left: 10%;
+      width: 500px;
+      height: 500px;
+      background: var(--secondary);
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-badge {
+      width: 45px;
+      height: 45px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .logo-text h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .connection-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      border-radius: 50px;
+      background: rgba(255, 23, 68, 0.08);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .connection-badge.connected {
+      background: rgba(0, 230, 118, 0.08);
+      border: 1px solid var(--success);
+      color: var(--success);
+      box-shadow: 0 0 12px var(--success-glow);
+    }
+
+    .status-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 8px currentColor; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+
+    /* GRID LAYOUT */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--glass-border-active);
+      box-shadow: 0 12px 40px 0 rgba(0, 242, 254, 0.1);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    /* Column Spans */
+    .c4 { grid-column: span 4; }
+    .c5 { grid-column: span 5; }
+    .c6 { grid-column: span 6; }
+    .c7 { grid-column: span 7; }
+    .c12 { grid-column: span 12; }
+
+    /* TEMPERATURE CIRCULAR GAUGE */
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .gauge-svg {
+      width: 180px;
+      height: 180px;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 12;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--success);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 502; /* 2 * PI * r (r=80) */
+      stroke-dashoffset: 502;
+      transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+    }
+
+    .gauge-info {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-temp {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      transition: color 0.4s ease;
+    }
+
+    .gauge-temp span {
+      font-size: 20px;
+      margin-top: 5px;
+      color: var(--text-muted);
+    }
+
+    .gauge-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .temp-stats {
+      display: flex;
+      width: 100%;
+      gap: 12px;
+    }
+
+    .temp-stat {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .temp-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .temp-stat-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* MOTOR CARD & FAN SVG */
+    .motor-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .motor-fan-box {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px solid var(--glass-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .motor-fan-box.active {
+      border-color: var(--success);
+      box-shadow: 0 0 25px var(--success-glow), inset 0 0 15px rgba(0, 230, 118, 0.2);
+    }
+
+    .fan-svg {
+      width: 80px;
+      height: 80px;
+      fill: var(--text-muted);
+      transition: fill 0.3s ease;
+    }
+
+    .motor-fan-box.active .fan-svg {
+      fill: var(--success);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .motor-status-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--danger);
+      text-shadow: 0 0 10px rgba(255, 23, 68, 0.1);
+      transition: all 0.3s;
+    }
+
+    .motor-status-text.active {
+      color: var(--success);
+      text-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+    }
+
+    /* UI Glass Buttons & Toggles */
+    .toggle-container {
+      display: flex;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      padding: 4px;
+      border-radius: 12px;
+      width: 100%;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 15px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.25s ease;
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #0d1527;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+    }
+
+    .action-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: #0d1527;
+      border-color: var(--primary);
+      box-shadow: 0 5px 15px var(--primary-glow);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* THRESHOLD SLIDER */
+    .slider-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .slider-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--warning);
+      text-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
+    }
+
+    .custom-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      outline: none;
+    }
+
+    .custom-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffe259 0%, #ffa751 100%);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 167, 81, 0.5);
+      transition: transform 0.2s;
+    }
+
+    .custom-range::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* REAL-TIME CHART CARD */
+    .chart-container {
+      position: relative;
+      height: 310px;
+      width: 100%;
+    }
+
+    /* CONFIGURATION CARD */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary-glow);
+    }
+
+    /* LOG PANEL */
+    .log-panel {
+      display: flex;
+      flex-direction: column;
+      height: 320px;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .clear-log-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .clear-log-btn:hover {
+      color: var(--danger);
+    }
+
+    .log-list {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 15px;
+      overflow-y: auto;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .log-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .log-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 10px;
+      line-height: 1.4;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      padding-bottom: 6px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-5px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .badge-mqtt { background: rgba(0, 242, 254, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+    .badge-sys { background: rgba(255, 255, 255, 0.08); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .badge-motor { background: rgba(0, 230, 118, 0.15); color: var(--success); border: 1px solid var(--success); }
+    .badge-alert { background: rgba(255, 23, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+    .log-msg {
+      word-break: break-all;
+    }
+
+    .log-empty {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 100px;
+    }
+
+    /* ALERTS SECTION */
+    .alert-box {
+      grid-column: span 12;
+      background: rgba(255, 23, 68, 0.08);
+      border: 1px solid var(--danger);
+      border-radius: 15px;
+      padding: 15px 20px;
+      display: none;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 0 15px var(--danger-glow);
+      animation: alertSlide 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes alertSlide {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .alert-box.show {
+      display: flex;
+    }
+
+    .alert-icon-wrapper {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .alert-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: #ff8a80;
+    }
+
+    @media (max-width: 1024px) {
+      .c4, .c5, .c6, .c7 { grid-column: span 6; }
+    }
+
+    @media (max-width: 640px) {
+      .c4, .c5, .c6, .c7 { grid-column: span 12; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full-width { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Glowing Blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="logo-container">
+        <div class="logo-badge">🤖</div>
+        <div class="logo-text">
+          <h1>Iotoria Motor Center</h1>
+          <p>Realtime IoT Controller</p>
+        </div>
+      </div>
+      <div class="connection-badge" id="connBadge">
+        <div class="status-pulse"></div>
+        <span id="connText">Disconnected</span>
+      </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <div class="grid">
+      
+      <!-- ALERT BOX -->
+      <div class="alert-box" id="alertContainer">
+        <div class="alert-icon-wrapper">⚠️</div>
+        <div class="alert-text" id="alertMessage">Alarm: Suhu kritis terdeteksi!</div>
+      </div>
+
+      <!-- SUHU (TEMPERATURE) CARD -->
+      <div class="card c4">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          Suhu Sensor
+        </div>
+        <div class="gauge-wrapper">
+          <svg class="gauge-svg">
+            <circle class="gauge-track" cx="90" cy="90" r="80"></circle>
+            <circle class="gauge-fill" id="tempGauge" cx="90" cy="90" r="80"></circle>
+          </svg>
+          <div class="gauge-info">
+            <div class="gauge-temp" id="tempNum">--<span>°C</span></div>
+            <div class="gauge-label">DHT11 Temp</div>
+          </div>
+        </div>
+        <div class="temp-stats">
+          <div class="temp-stat">
+            <div class="temp-stat-label">Min</div>
+            <div class="temp-stat-value" id="tempMin">--</div>
+          </div>
+          <div class="temp-stat">
+            <div class="temp-stat-label">Max</div>
+            <div class="temp-stat-value" id="tempMax">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTOR CONTROL CARD -->
+      <div class="card c4">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+          Motor Control
+        </div>
+        <div class="motor-wrapper">
+          <div class="motor-fan-box" id="fanIndicator">
+            <!-- 3D Fan SVG -->
+            <svg class="fan-svg" viewBox="0 0 24 24">
+              <path d="M12,11A1,1,0,1,0,13,12,1,1,0,0,0,12,11Zm0-9a2,2,0,0,0-2,2V8.1a4,4,0,0,0,4,0V4A2,2,0,0,0,12,2Zm8,8H15.9a4,4,0,0,0,0,4H20a2,2,0,0,0,0-4ZM8.1,10H4a2,2,0,0,0,0,4H8.1a4,4,0,0,0,0-4Zm3.9,5.9a4,4,0,0,0-2,0V20a2,2,0,0,0,4,0V15.9A4,4,0,0,0,12,15.9Z"/>
+            </svg>
+          </div>
+          
+          <div style="text-align: center;">
+            <div class="motor-status-text" id="motorStateText">STATUS: OFF</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Uptime: <span id="uptime">--:--</span></div>
+          </div>
+
+          <div class="toggle-container">
+            <button class="toggle-btn active" id="btnModeAuto" onclick="sendMode('AUTO')">Auto</button>
+            <button class="toggle-btn" id="btnModeManual" onclick="sendMode('MANUAL')">Manual</button>
+          </div>
+
+          <button class="action-btn" id="btnActionMotor" onclick="toggleMotor()" disabled>Nyalakan Motor</button>
+        </div>
+      </div>
+
+      <!-- THRESHOLD CARD -->
+      <div class="card c4">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>
+          Threshold Control
+        </div>
+        <div class="slider-box">
+          <div class="slider-header">
+            <span class="form-label">Batas Threshold</span>
+            <div class="slider-value"><span id="thresholdNum">30</span><span style="font-size: 14px; color: var(--text-muted);">°C</span></div>
+          </div>
+          <input type="range" class="custom-range" id="thresholdSlider" min="20" max="80" value="30" oninput="changeThreshold(this.value)" disabled>
+          <div class="slider-labels">
+            <span>20°C</span>
+            <span>50°C</span>
+            <span>80°C</span>
+          </div>
+          
+          <div style="margin-top: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 12px; border: 1px solid var(--glass-border);">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+              <span style="color: var(--text-muted);">Jarak ke Threshold:</span>
+              <span id="tempGap" style="font-weight: bold; font-family: 'Roboto Mono', monospace;">--</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+              <span style="color: var(--text-muted);">Total Alarm Terpicu:</span>
+              <span id="alertCount" style="font-weight: bold; color: var(--warning); font-family: 'Roboto Mono', monospace;">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REAL-TIME CHART -->
+      <div class="card c7">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+          Riwayat Grafik Suhu Realtime
+        </div>
+        <div class="chart-container">
+          <canvas id="realtimeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- MQTT & LOGS CONTAINER -->
+      <div class="card c5">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Logs & Aktivitas
+        </div>
+        <div class="log-panel">
+          <div class="log-header">
+            <span class="form-label">Aktivitas Terbaru</span>
+            <button class="clear-log-btn" onclick="clearLogs()">Clear Log</button>
+          </div>
+          <div class="log-list" id="logList">
+            <div class="log-empty" id="logEmpty">Belum ada aktivitas. Hubungkan MQTT terlebih dahulu.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURATION PANELS -->
+      <div class="card c12">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          Konfigurasi Broker & MQTT
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="mqttHost">Host Broker</label>
+            <input type="text" class="form-control" id="mqttHost" value="iotoria.web.id">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mqttProto">Protokol</label>
+            <select class="form-control" id="mqttProto" onchange="autoUpdatePort()">
+              <option value="ws">ws:// (Normal)</option>
+              <option value="wss">wss:// (Secured)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mqttPort">Port (WebSocket)</label>
+            <input type="text" class="form-control" id="mqttPort" value="1883">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mqttUser">MQTT Username</label>
+            <input type="text" class="form-control" id="mqttUser" value="rosyid">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mqttPass">MQTT Password</label>
+            <input type="password" class="form-control" id="mqttPass" value="Arrosyid1207">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mqttTopicPrefix">Topic Prefix</label>
+            <input type="text" class="form-control" id="mqttTopicPrefix" value="rosyid">
+          </div>
+          <div class="form-group full-width">
+            <button class="action-btn" id="btnConnect" onclick="toggleConnection()" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #0d1527; font-weight: 700; border: none;">Koneksikan ke Broker</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── CONFIG & STATE VARIABLES ─────────────────────────────
+    let mqttClient = null;
+    let isConnected = false;
+    let motorOn = false;
+    let systemMode = 'AUTO'; // Default AUTO
+    
+    let currentTemp = null;
+    let minTemp = null;
+    let maxTemp = null;
+    let threshold = 30.0;
+    
+    let alertCount = 0;
+    let motorStartTime = null;
+    let uptimeTimer = null;
+
+    // Load credentials from localStorage if available
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('mqtt_host')) document.getElementById('mqttHost').value = localStorage.getItem('mqtt_host');
+      if (localStorage.getItem('mqtt_proto')) {
+        document.getElementById('mqttProto').value = localStorage.getItem('mqtt_proto');
+      } else {
+        // Auto-detect protocol based on site protocol
+        const currentProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        document.getElementById('mqttProto').value = currentProto;
+      }
+      if (localStorage.getItem('mqtt_port')) {
+        document.getElementById('mqttPort').value = localStorage.getItem('mqtt_port');
+      } else {
+        autoUpdatePort();
+      }
+      if (localStorage.getItem('mqtt_user')) document.getElementById('mqttUser').value = localStorage.getItem('mqtt_user');
+      if (localStorage.getItem('mqtt_pass')) document.getElementById('mqttPass').value = localStorage.getItem('mqtt_pass');
+      if (localStorage.getItem('mqtt_topic_prefix')) document.getElementById('mqttTopicPrefix').value = localStorage.getItem('mqtt_topic_prefix');
+    });
+
+    function autoUpdatePort() {
+      const proto = document.getElementById('mqttProto').value;
+      document.getElementById('mqttPort').value = (proto === 'wss') ? '8883' : '1883';
+    }
+
+    // ── MQTT SUBSCRIBED TOPICS ────────────────────────────────
+    function getMqttTopics() {
+      const prefix = document.getElementById('mqttTopicPrefix').value.trim() || 'rosyid';
+      return {
+        suhu: `${prefix}/suhu`,
+        motor: `${prefix}/motor`,
+        threshold: `${prefix}/threshold`,
+        status: `${prefix}/status`,
+        alert: `${prefix}/alert`
+      };
+    }
+
+    // ── CONNECTION CONTROL ───────────────────────────────────
+    function toggleConnection() {
+      if (isConnected) {
+        disconnectMQTT();
+      } else {
+        connectMQTT();
+      }
+    }
+
+    function connectMQTT() {
+      const host = document.getElementById('mqttHost').value.trim();
+      const proto = document.getElementById('mqttProto').value;
+      const port = document.getElementById('mqttPort').value.trim();
+      const username = document.getElementById('mqttUser').value.trim();
+      const password = document.getElementById('mqttPass').value.trim();
+
+      // Save to localStorage
+      localStorage.setItem('mqtt_host', host);
+      localStorage.setItem('mqtt_proto', proto);
+      localStorage.setItem('mqtt_port', port);
+      localStorage.setItem('mqtt_user', username);
+      localStorage.setItem('mqtt_pass', password);
+      localStorage.setItem('mqtt_topic_prefix', document.getElementById('mqttTopicPrefix').value.trim());
+
+      const connBtn = document.getElementById('btnConnect');
+      connBtn.disabled = true;
+      connBtn.textContent = "Connecting...";
+
+      // Embed username and password in connection URL for basic HTTP authentication during WebSocket handshake
+      const wsUrl = (username && password)
+        ? `${proto}://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/mqtt`
+        : `${proto}://${host}:${port}/mqtt`;
+      
+      // Mask password for display logs
+      const displayUrl = username
+        ? `${proto}://${username}:••••••••@${host}:${port}/mqtt`
+        : `${proto}://${host}:${port}/mqtt`;
+      
+      addLog('sys', `Menghubungkan ke ${displayUrl} ...`);
+
+      const options = {
+        username: username,
+        password: password,
+        clientId: 'iotoria_web_' + Math.random().toString(16).substring(2, 10),
+        keepalive: 60,
+        reconnectPeriod: 1000,
+        connectTimeout: 5000,
+        clean: true
+      };
+
+      try {
+        mqttClient = mqtt.connect(wsUrl, options);
+
+        mqttClient.on('connect', () => {
+          isConnected = true;
+          updateConnUI(true);
+          addLog('mqtt', 'Berhasil Terhubung ke Broker MQTT.');
+
+          const topics = getMqttTopics();
+          mqttClient.subscribe([topics.suhu, topics.motor, topics.threshold, topics.status, topics.alert], (err) => {
+            if (!err) {
+              addLog('mqtt', 'Subscribed ke semua topic kontrol.');
+            } else {
+              addLog('alert', 'Gagal subscribe ke topic kontrol.');
+            }
+          });
+
+          // Enable controls
+          document.getElementById('thresholdSlider').disabled = false;
+          updateButtonStates();
+        });
+
+        mqttClient.on('message', (topic, payload) => {
+          handleIncomingMessage(topic, payload.toString());
+        });
+
+        mqttClient.on('error', (err) => {
+          console.error(err);
+          addLog('alert', 'Koneksi error: ' + err.message);
+          disconnectMQTT();
+        });
+
+        mqttClient.on('close', () => {
+          if (isConnected) {
+            addLog('sys', 'Koneksi terputus dengan broker.');
+            disconnectMQTT();
+          }
+        });
+
+      } catch (err) {
+        addLog('alert', 'Error inisialisasi: ' + err.message);
+        disconnectMQTT();
+      }
+    }
+
+    function disconnectMQTT() {
+      if (mqttClient) {
+        try {
+          mqttClient.end();
+        } catch(e){}
+        mqttClient = null;
+      }
+      isConnected = false;
+      updateConnUI(false);
+      
+      // Disable interactive controls
+      document.getElementById('thresholdSlider').disabled = true;
+      document.getElementById('btnActionMotor').disabled = true;
+      stopUptime();
+      addLog('sys', 'Koneksi diputus secara manual.');
+    }
+
+    function updateConnUI(connected) {
+      const badge = document.getElementById('connBadge');
+      const text = document.getElementById('connText');
+      const btn = document.getElementById('btnConnect');
+
+      if (connected) {
+        badge.classList.add('connected');
+        text.textContent = 'Connected';
+        btn.textContent = 'Putuskan Koneksi';
+        btn.style.background = 'linear-gradient(135deg, var(--danger) 0%, #b30000 100%)';
+        btn.style.color = '#fff';
+      } else {
+        badge.classList.remove('connected');
+        text.textContent = 'Disconnected';
+        btn.textContent = 'Koneksikan ke Broker';
+        btn.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)';
+        btn.style.color = '#0d1527';
+      }
+      btn.disabled = false;
+    }
+
+    // ── INCOMING MESSAGES HANDLER ────────────────────────────
+    function handleIncomingMessage(topic, message) {
+      const topics = getMqttTopics();
+      const msg = message.trim();
+
+      if (topic === topics.suhu) {
+        const val = parseFloat(msg);
+        if (!isNaN(val)) {
+          updateTemperature(val);
+        }
+      } 
+      else if (topic === topics.threshold) {
+        const val = parseFloat(msg);
+        if (!isNaN(val)) {
+          threshold = val;
+          document.getElementById('thresholdSlider').value = val;
+          document.getElementById('thresholdNum').textContent = val.toFixed(0);
+          updateGapInfo();
+          addLog('sys', `Batas suhu threshold diperbarui: ${val}°C`);
+        }
+      } 
+      else if (topic === topics.status) {
+        const uMsg = msg.toUpperCase();
+        if (uMsg === 'AUTO' || uMsg === 'MANUAL') {
+          updateSystemMode(uMsg);
+        } else {
+          const on = (uMsg === 'ON' || uMsg === '1');
+          updateMotorState(on);
+        }
+      } 
+      else if (topic === topics.alert) {
+        addLog('alert', msg);
+        triggerAlert(msg);
+      }
+    }
+
+    // ── UPDATE SUHU & VISUAL GAUGE ──────────────────────────
+    function updateTemperature(val) {
+      currentTemp = val;
+      document.getElementById('tempNum').innerHTML = val.toFixed(1) + '<span>°C</span>';
+
+      // Min/Max Tracking
+      if (minTemp === null || val < minTemp) {
+        minTemp = val;
+        document.getElementById('tempMin').textContent = minTemp.toFixed(1) + '°C';
+      }
+      if (maxTemp === null || val > maxTemp) {
+        maxTemp = val;
+        document.getElementById('tempMax').textContent = maxTemp.toFixed(1) + '°C';
+      }
+
+      // Update Circle Gauge (radial)
+      // Gauge Range: 20°C to 90°C (offset mapping)
+      const gauge = document.getElementById('tempGauge');
+      const minVal = 20;
+      const maxVal = 90;
+      const percent = Math.min(1, Math.max(0, (val - minVal) / (maxVal - minVal)));
+      const strokeCircumference = 502;
+      const strokeOffset = strokeCircumference - (percent * strokeCircumference);
+      gauge.style.strokeDashoffset = strokeOffset;
+
+      // Gauge Color transitions based on critical temperature
+      if (val >= threshold) {
+        gauge.style.stroke = 'var(--danger)';
+      } else if (val >= threshold - 3) {
+        gauge.style.stroke = 'var(--warning)';
+      } else {
+        gauge.style.stroke = 'var(--success)';
+      }
+
+      updateGapInfo();
+      appendChartData(val);
+    }
+
+    function updateGapInfo() {
+      if (currentTemp === null) return;
+      const gap = threshold - currentTemp;
+      const gapEl = document.getElementById('tempGap');
+      
+      gapEl.textContent = (gap >= 0 ? '+' : '') + gap.toFixed(1) + '°C';
+      
+      if (gap <= 0) {
+        gapEl.style.color = 'var(--danger)';
+      } else if (gap <= 3) {
+        gapEl.style.color = 'var(--warning)';
+      } else {
+        gapEl.style.color = 'var(--success)';
+      }
+    }
+
+    // ── MOTOR STATE CONTROL ──────────────────────────────────
+    function updateMotorState(on) {
+      motorOn = on;
+      const fan = document.getElementById('fanIndicator');
+      const text = document.getElementById('motorStateText');
+      const btn = document.getElementById('btnActionMotor');
+
+      if (on) {
+        fan.classList.add('active');
+        text.textContent = "STATUS: RUNNING";
+        text.classList.add('active');
+        btn.textContent = "Matikan Motor";
+        if (!motorStartTime) {
+          motorStartTime = Date.now();
+          startUptime();
+        }
+        addLog('motor', 'Motor berputar (ON).');
+      } else {
+        fan.classList.remove('active');
+        text.textContent = "STATUS: OFF";
+        text.classList.remove('active');
+        btn.textContent = "Nyalakan Motor";
+        stopUptime();
+        addLog('motor', 'Motor dinonaktifkan (OFF).');
+      }
+    }
+
+    function toggleMotor() {
+      if (!isConnected) return;
+      const topics = getMqttTopics();
+      const nextState = motorOn ? 'OFF' : 'ON';
+      mqttClient.publish(topics.motor, nextState);
+      addLog('mqtt', `Mengirim perintah manual: Motor ${nextState}`);
+    }
+
+    // ── MODE STATE CONTROL (AUTO / MANUAL) ───────────────────
+    function updateSystemMode(mode) {
+      systemMode = mode;
+      const autoBtn = document.getElementById('btnModeAuto');
+      const manualBtn = document.getElementById('btnModeManual');
+
+      if (mode === 'AUTO') {
+        autoBtn.classList.add('active');
+        manualBtn.classList.remove('active');
+        addLog('sys', 'Sistem berjalan di Mode: AUTO');
+      } else {
+        autoBtn.classList.remove('active');
+        manualBtn.classList.add('active');
+        addLog('sys', 'Sistem berjalan di Mode: MANUAL');
+      }
+      updateButtonStates();
+    }
+
+    function sendMode(mode) {
+      if (!isConnected) return;
+      const topics = getMqttTopics();
+      if (mode === 'AUTO') {
+        mqttClient.publish(topics.motor, 'AUTO');
+        addLog('mqtt', 'Mengirim perintah: Alihkan Mode ke AUTO');
+      } else {
+        // Switching to manual keeps current motor state explicitly
+        const currentState = motorOn ? 'ON' : 'OFF';
+        mqttClient.publish(topics.motor, currentState);
+        addLog('mqtt', `Mengirim perintah: Alihkan ke MANUAL (${currentState})`);
+      }
+    }
+
+    function updateButtonStates() {
+      const motorBtn = document.getElementById('btnActionMotor');
+      if (isConnected && systemMode === 'MANUAL') {
+        motorBtn.disabled = false;
+      } else {
+        motorBtn.disabled = true;
+      }
+    }
+
+    // ── THRESHOLD SLIDER CONTROLLER ──────────────────────────
+    function changeThreshold(value) {
+      document.getElementById('thresholdNum').textContent = value;
+      if (!isConnected) return;
+      
+      const topics = getMqttTopics();
+      mqttClient.publish(topics.threshold, value.toString(), { retain: true });
+    }
+
+    // ── ALERTS NOTIFICATION ──────────────────────────────────
+    function triggerAlert(message) {
+      alertCount++;
+      document.getElementById('alertCount').textContent = alertCount;
+
+      const container = document.getElementById('alertContainer');
+      const alertMsg = document.getElementById('alertMessage');
+      
+      alertMsg.textContent = message;
+      container.classList.add('show');
+      
+      // Auto hide alarm box after 6 seconds
+      setTimeout(() => {
+        container.classList.remove('show');
+      }, 6000);
+    }
+
+    // ── UPTIME TIMER ─────────────────────────────────────────
+    function startUptime() {
+      stopUptime();
+      uptimeTimer = setInterval(() => {
+        if (!motorStartTime) return;
+        const elapsed = Math.floor((Date.now() - motorStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        document.getElementById('uptime').textContent = 
+          String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      }, 1000);
+    }
+
+    function stopUptime() {
+      clearInterval(uptimeTimer);
+      uptimeTimer = null;
+      motorStartTime = null;
+      document.getElementById('uptime').textContent = '--:--';
+    }
+
+    // ── LOGS SYSTEM ──────────────────────────────────────────
+    function addLog(type, message) {
+      const logList = document.getElementById('logList');
+      const empty = document.getElementById('logEmpty');
+      if (empty) empty.remove();
+
+      const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+      
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      
+      let badgeClass = 'badge-sys';
+      let badgeText = 'system';
+      
+      if (type === 'mqtt') { badgeClass = 'badge-mqtt'; badgeText = 'mqtt'; }
+      else if (type === 'motor') { badgeClass = 'badge-motor'; badgeText = 'motor'; }
+      else if (type === 'alert') { badgeClass = 'badge-alert'; badgeText = 'alert'; }
+
+      item.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-badge ${badgeClass}">${badgeText}</span>
+        <span class="log-msg">${message}</span>
+      `;
+      
+      logList.insertBefore(item, logList.firstChild);
+
+      // Cap logs at 30 items
+      if (logList.children.length > 30) {
+        logList.removeChild(logList.lastChild);
+      }
+    }
+
+    function clearLogs() {
+      const logList = document.getElementById('logList');
+      logList.innerHTML = '<div class="log-empty" id="logEmpty">Log dibersihkan.</div>';
+    }
+
+    // ── CHART.JS SYSTEM ──────────────────────────────────────
+    const ctx = document.getElementById('realtimeChart').getContext('2d');
+    
+    // Gradient decoration for Chart
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+    gradient.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Suhu Aktual (°C)',
+            data: [],
+            borderColor: '#00f2fe',
+            borderWidth: 3,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 2,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#00f2fe',
+          },
+          {
+            label: 'Threshold (°C)',
+            data: [],
+            borderColor: 'rgba(255, 179, 0, 0.65)',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+            tension: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#94a3b8', font: { family: 'Poppins', size: 11 } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+            ticks: { color: '#64748b', font: { family: 'Roboto Mono', size: 10 } }
+          },
+          y: {
+            min: 15,
+            max: 85,
+            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+            ticks: { color: '#64748b', font: { family: 'Roboto Mono', size: 10 } }
+          }
+        }
+      }
+    });
+
+    function appendChartData(temp) {
+      const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      chart.data.labels.push(time);
+      chart.data.datasets[0].data.push(temp);
+      chart.data.datasets[1].data.push(threshold);
+
+      // Keep max 20 data points on charts
+      if (chart.data.labels.length > 20) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+        chart.data.datasets[1].data.shift();
+      }
+
+      chart.update('none'); // Update without full animation for performance
+    }
+  </script>
+</body>
+</html>
