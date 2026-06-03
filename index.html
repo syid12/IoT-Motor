@@ -772,12 +772,15 @@
       .c4 {
         grid-column: span 6;
       }
+
       .c5 {
         grid-column: span 6;
       }
+
       .c7 {
         grid-column: span 12;
       }
+
       .c12 {
         grid-column: span 12;
       }
@@ -787,16 +790,20 @@
       body {
         padding: 15px;
       }
+
       header {
         padding: 15px;
       }
+
       .card {
         padding: 20px;
       }
+
       .gauge-svg {
         width: 160px;
         height: 160px;
       }
+
       .gauge-temp {
         font-size: 38px;
       }
@@ -806,39 +813,76 @@
       body {
         padding: 10px;
       }
+
       header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 15px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        gap: 10px;
       }
+
       .logo-container {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        text-align: left;
       }
+
+      .logo-badge {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .logo-text h1 {
+        font-size: 15px;
+        line-height: 1.2;
+      }
+
+      .logo-text p {
+        font-size: 8px;
+        letter-spacing: 1px;
+      }
+
       .connection-badge {
-        width: 100%;
-        justify-content: center;
+        width: auto;
+        padding: 6px 12px;
+        font-size: 11px;
+        flex-shrink: 0;
       }
-      .c4, .c5, .c6, .c7, .c12 {
+
+      .c4,
+      .c5,
+      .c6,
+      .c7,
+      .c12 {
         grid-column: span 12;
       }
+
       .card {
         padding: 15px;
       }
+
       .form-grid {
         grid-template-columns: 1fr;
       }
+
       .form-group.full-width {
         grid-column: span 1;
       }
+
       .gauge-svg {
         width: 150px;
         height: 150px;
       }
+
       .gauge-temp {
         font-size: 36px;
       }
+
       .temp-stats {
         gap: 8px;
       }
@@ -899,8 +943,15 @@
     }
 
     @keyframes pulseAlert {
-      0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 23, 68, 0.5)); }
-      100% { transform: scale(1.15); filter: drop-shadow(0 0 20px var(--danger)); }
+      0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(255, 23, 68, 0.5));
+      }
+
+      100% {
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 20px var(--danger));
+      }
     }
 
     .modal-title {
@@ -989,7 +1040,7 @@
           Suhu Sensor
         </div>
         <div class="gauge-wrapper">
-          <svg class="gauge-svg">
+          <svg class="gauge-svg" viewBox="0 0 180 180">
             <circle class="gauge-track" cx="90" cy="90" r="80"></circle>
             <circle class="gauge-fill" id="tempGauge" cx="90" cy="90" r="80"></circle>
           </svg>
@@ -1598,7 +1649,7 @@
 
       alertMsg.textContent = message;
       container.classList.add('show');
-      
+
       // Show prominent modal popup
       showPopUpModal(message);
 
