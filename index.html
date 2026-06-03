@@ -1555,9 +1555,7 @@
         body: JSON.stringify({
           topic: topic,
           message: message.toString(),
-          qos: 1,
-          retain: true,
-          retained: true
+          qos: 1
         })
       })
         .then(res => {
