@@ -253,6 +253,10 @@
     }
 
     /* Column Spans */
+    .c3 {
+      grid-column: span 3;
+    }
+
     .c4 {
       grid-column: span 4;
     }
@@ -427,6 +431,51 @@
     .motor-status-text.active {
       color: var(--success);
       text-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+    }
+
+    /* COOLING FAN CARD & SVG */
+    .cooling-fan-box {
+      width: 120px;
+      height: 120px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px solid var(--glass-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .cooling-fan-box.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 25px var(--primary-glow), inset 0 0 15px rgba(0, 242, 254, 0.2);
+    }
+
+    .cooling-fan-svg {
+      width: 80px;
+      height: 80px;
+      fill: var(--text-muted);
+      transition: fill 0.3s ease;
+    }
+
+    .cooling-fan-box.active .cooling-fan-svg {
+      fill: var(--primary);
+      animation: spin 0.6s linear infinite; /* Slightly faster than motor spin */
+    }
+
+    .kipas-status-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--danger);
+      text-shadow: 0 0 10px rgba(255, 23, 68, 0.1);
+      transition: all 0.3s;
+    }
+
+    .kipas-status-text.active {
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
     }
 
     /* UI Glass Buttons & Toggles */
@@ -722,6 +771,12 @@
       border: 1px solid var(--danger);
     }
 
+    .badge-kipas {
+      background: rgba(79, 172, 254, 0.15);
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+    }
+
     .log-msg {
       word-break: break-all;
     }
@@ -783,6 +838,10 @@
 
     /* RESPONSIVE DESIGN & HARMONIZATION */
     @media (max-width: 1024px) {
+      .c3 {
+        grid-column: span 6;
+      }
+
       .c4 {
         grid-column: span 6;
       }
@@ -868,6 +927,7 @@
         flex-shrink: 0;
       }
 
+      .c3,
       .c4,
       .c5,
       .c6,
@@ -1046,7 +1106,7 @@
       </div>
 
       <!-- SUHU (TEMPERATURE) CARD -->
-      <div class="card c4">
+      <div class="card c3">
         <div class="card-title">
           <svg viewBox="0 0 24 24">
             <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
@@ -1076,7 +1136,7 @@
       </div>
 
       <!-- MOTOR CONTROL CARD -->
-      <div class="card c4">
+      <div class="card c3">
         <div class="card-title">
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" />
@@ -1114,8 +1174,39 @@
         </div>
       </div>
 
+      <!-- COOLING FAN CARD -->
+      <div class="card c3">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24">
+            <path stroke="currentColor" fill="none" stroke-width="2" d="M12 2v20M2 12h20M12 12m-9 0a9 9 0 1 1 18 0 9 9 0 0 1-18 0" />
+          </svg>
+          Kipas Pendingin
+        </div>
+        <div class="motor-wrapper">
+          <div class="cooling-fan-box" id="coolingFanIndicator">
+            <!-- 3D Fan SVG -->
+            <svg class="cooling-fan-svg" viewBox="0 0 24 24">
+              <path
+                d="M12,11A1,1,0,1,0,13,12,1,1,0,0,0,12,11Zm0-9a2,2,0,0,0-2,2V8.1a4,4,0,0,0,4,0V4A2,2,0,0,0,12,2Zm8,8H15.9a4,4,0,0,0,0,4H20a2,2,0,0,0,0-4ZM8.1,10H4a2,2,0,0,0,0,4H8.1a4,4,0,0,0,0-4Zm3.9,5.9a4,4,0,0,0-2,0V20a2,2,0,0,0,4,0V15.9A4,4,0,0,0,12,15.9Z" />
+            </svg>
+          </div>
+
+          <div style="text-align: center;">
+            <div class="kipas-status-text" id="kipasStateText">STATUS: OFF</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Mode: <span
+                style="color: var(--primary); font-weight: 600;">OTOMATIS</span></div>
+          </div>
+
+          <div style="margin-top: 5px; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 12px; border: 1px solid var(--glass-border); width: 100%;">
+            <div style="font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+              Kipas menyala otomatis saat suhu &ge; threshold, dan mati saat suhu aman.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- THRESHOLD CARD -->
-      <div class="card c4">
+      <div class="card c3">
         <div class="card-title">
           <svg viewBox="0 0 24 24">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
@@ -1222,6 +1313,7 @@
     let mqttClient = null;
     let isConnected = false;
     let motorOn = false;
+    let kipasOn = false;
     let systemMode = 'AUTO'; // Default AUTO
     let systemPower = false; // Default OFF
 
@@ -1282,7 +1374,8 @@
         threshold: `${prefix}/threshold`,
         status: `${prefix}/status`,
         alert: `${prefix}/alert`,
-        power: `${prefix}/power`
+        power: `${prefix}/power`,
+        kipas: `${prefix}/kipas`
       };
     }
 
@@ -1341,6 +1434,7 @@
           mqttClient.emit('join_topic', topics.threshold);
           mqttClient.emit('join_topic', topics.status);
           mqttClient.emit('join_topic', topics.alert);
+          mqttClient.emit('join_topic', topics.kipas);
 
           addLog('sys', `Subscribed ke topic: ${prefix}/*`);
 
@@ -1461,6 +1555,11 @@
         addLog('alert', msg);
         triggerAlert(msg);
       }
+      else if (topic === topics.kipas) {
+        const uMsg = msg.toUpperCase();
+        const active = (uMsg === 'ON' || uMsg === '1');
+        updateKipasState(active);
+      }
     }
 
     // ── UPDATE SUHU & VISUAL GAUGE ──────────────────────────
@@ -1510,6 +1609,13 @@
         } else {
           updateMotorState(false);
         }
+      }
+
+      // Local fan backup logic (runs regardless of systemMode)
+      if (systemPower) {
+        updateKipasState(val >= threshold);
+      } else {
+        updateKipasState(false);
       }
 
       updateGapInfo();
@@ -1566,6 +1672,25 @@
         localStorage.removeItem('motor_start_time');
         stopUptime();
         addLog('motor', 'Motor dinonaktifkan (OFF).');
+      }
+    }
+
+    function updateKipasState(active) {
+      if (kipasOn === active) return;
+      kipasOn = active;
+      const fan = document.getElementById('coolingFanIndicator');
+      const text = document.getElementById('kipasStateText');
+
+      if (active) {
+        fan.classList.add('active');
+        text.textContent = "STATUS: RUNNING";
+        text.classList.add('active');
+        addLog('kipas', 'Kipas Pendingin menyala (ON).');
+      } else {
+        fan.classList.remove('active');
+        text.textContent = "STATUS: OFF";
+        text.classList.remove('active');
+        addLog('kipas', 'Kipas Pendingin mati (OFF).');
       }
     }
 
@@ -1631,11 +1756,17 @@
         if (systemMode === 'AUTO' && currentTemp !== null) {
           updateMotorState(currentTemp < threshold);
         }
+
+        // Evaluate fan state immediately
+        if (currentTemp !== null) {
+          updateKipasState(currentTemp >= threshold);
+        }
       } else {
         btnOff.classList.add('active');
         btnOn.classList.remove('active');
         addLog('sys', 'Power Utama: OFF');
         updateMotorState(false);
+        updateKipasState(false);
       }
       updateButtonStates();
     }
@@ -1703,6 +1834,15 @@
       // If in AUTO mode, evaluate motor state immediately
       if (systemMode === 'AUTO' && currentTemp !== null) {
         updateMotorState(currentTemp < threshold);
+      }
+
+      // Evaluate fan state immediately
+      if (currentTemp !== null) {
+        if (systemPower) {
+          updateKipasState(currentTemp >= threshold);
+        } else {
+          updateKipasState(false);
+        }
       }
 
       if (!publish || !isConnected) return;
@@ -1785,6 +1925,7 @@
       if (type === 'mqtt') { badgeClass = 'badge-mqtt'; badgeText = 'mqtt'; }
       else if (type === 'motor') { badgeClass = 'badge-motor'; badgeText = 'motor'; }
       else if (type === 'alert') { badgeClass = 'badge-alert'; badgeText = 'alert'; }
+      else if (type === 'kipas') { badgeClass = 'badge-kipas'; badgeText = 'kipas'; }
 
       item.innerHTML = `
         <span class="log-time">${time}</span>
