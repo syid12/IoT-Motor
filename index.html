@@ -1341,7 +1341,6 @@
           mqttClient.emit('join_topic', topics.threshold);
           mqttClient.emit('join_topic', topics.status);
           mqttClient.emit('join_topic', topics.alert);
-          mqttClient.emit('join_topic', topics.power);
 
           addLog('sys', `Subscribed ke topic: ${prefix}/*`);
 
@@ -1445,6 +1444,10 @@
         const uMsg = msg.toUpperCase();
         if (uMsg === 'AUTO' || uMsg === 'MANUAL') {
           updateSystemMode(uMsg);
+        } else if (uMsg === 'POWER_ON') {
+          updateSystemPower(true);
+        } else if (uMsg === 'POWER_OFF') {
+          updateSystemPower(false);
         } else {
           const on = (uMsg === 'ON' || uMsg === '1');
           updateMotorState(on);
@@ -1457,11 +1460,6 @@
       else if (topic === topics.alert) {
         addLog('alert', msg);
         triggerAlert(msg);
-      }
-      else if (topic === topics.power) {
-        const uMsg = msg.toUpperCase();
-        const on = (uMsg === 'ON' || uMsg === '1');
-        updateSystemPower(on);
       }
     }
 
