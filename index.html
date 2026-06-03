@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Iotoria - Premium Motor & Suhu Control</title>
   
-  <!-- MQTT & Chart.js CDN -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <!-- Socket.IO & Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   
   <!-- Google Fonts -->
@@ -856,38 +856,23 @@
       <div class="card c12">
         <div class="card-title">
           <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-          Konfigurasi Broker & MQTT
+          Konfigurasi Portal & MQTT
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label" for="mqttHost">Host Broker</label>
-            <input type="text" class="form-control" id="mqttHost" value="iotoria.web.id">
+            <label class="form-label" for="mqttHost">Host Portal</label>
+            <input type="text" class="form-control" id="mqttHost" value="portal.iotoria.web.id">
           </div>
           <div class="form-group">
-            <label class="form-label" for="mqttProto">Protokol</label>
-            <select class="form-control" id="mqttProto" onchange="autoUpdatePort()">
-              <option value="ws">ws:// (Normal)</option>
-              <option value="wss">wss:// (Secured)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="mqttPort">Port (WebSocket)</label>
-            <input type="text" class="form-control" id="mqttPort" value="1883">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="mqttUser">MQTT Username</label>
-            <input type="text" class="form-control" id="mqttUser" value="rosyid">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="mqttPass">MQTT Password</label>
-            <input type="password" class="form-control" id="mqttPass" value="Arrosyid1207">
+            <label class="form-label" for="mqttToken">Auth Token (JWT)</label>
+            <input type="password" class="form-control" id="mqttToken" placeholder="Tempel token JWT dari portal">
           </div>
           <div class="form-group">
             <label class="form-label" for="mqttTopicPrefix">Topic Prefix</label>
             <input type="text" class="form-control" id="mqttTopicPrefix" value="rosyid">
           </div>
           <div class="form-group full-width">
-            <button class="action-btn" id="btnConnect" onclick="toggleConnection()" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #0d1527; font-weight: 700; border: none;">Koneksikan ke Broker</button>
+            <button class="action-btn" id="btnConnect" onclick="toggleConnection()" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #0d1527; font-weight: 700; border: none;">Koneksikan ke Portal</button>
           </div>
         </div>
       </div>
@@ -913,28 +898,33 @@
 
     // Load credentials from localStorage if available
     window.addEventListener('DOMContentLoaded', () => {
-      if (localStorage.getItem('mqtt_host')) document.getElementById('mqttHost').value = localStorage.getItem('mqtt_host');
-      if (localStorage.getItem('mqtt_proto')) {
-        document.getElementById('mqttProto').value = localStorage.getItem('mqtt_proto');
-      } else {
-        // Auto-detect protocol based on site protocol
-        const currentProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        document.getElementById('mqttProto').value = currentProto;
+      // Initialize localStorage with Socket.IO settings and provided token on first run
+      if (!localStorage.getItem('mqtt_initialized_socketio_3')) {
+        localStorage.setItem('mqtt_host', 'portal.iotoria.web.id');
+        localStorage.setItem('mqtt_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYzLCJ1c2VybmFtZSI6InJvc3lpZCIsImlhdCI6MTc4MDQ3MTUyMSwiZXhwIjoxNzgxMDc2MzIxfQ.mDYuwQhVI0y63BcrS01zWF8qmjCrBTCRkVDhhfSvolU');
+        localStorage.setItem('mqtt_topic_prefix', 'rosyid');
+        localStorage.setItem('mqtt_initialized_socketio_3', 'true');
       }
-      if (localStorage.getItem('mqtt_port')) {
-        document.getElementById('mqttPort').value = localStorage.getItem('mqtt_port');
-      } else {
-        autoUpdatePort();
-      }
-      if (localStorage.getItem('mqtt_user')) document.getElementById('mqttUser').value = localStorage.getItem('mqtt_user');
-      if (localStorage.getItem('mqtt_pass')) document.getElementById('mqttPass').value = localStorage.getItem('mqtt_pass');
-      if (localStorage.getItem('mqtt_topic_prefix')) document.getElementById('mqttTopicPrefix').value = localStorage.getItem('mqtt_topic_prefix');
-    });
 
-    function autoUpdatePort() {
-      const proto = document.getElementById('mqttProto').value;
-      document.getElementById('mqttPort').value = (proto === 'wss') ? '8883' : '1883';
-    }
+      if (localStorage.getItem('mqtt_host')) document.getElementById('mqttHost').value = localStorage.getItem('mqtt_host');
+      if (localStorage.getItem('mqtt_token')) document.getElementById('mqttToken').value = localStorage.getItem('mqtt_token');
+      if (localStorage.getItem('mqtt_topic_prefix')) document.getElementById('mqttTopicPrefix').value = localStorage.getItem('mqtt_topic_prefix');
+
+      // Restore system mode if saved
+      const savedMode = localStorage.getItem('system_mode');
+      if (savedMode) {
+        updateSystemMode(savedMode);
+      }
+
+      // Restore motor state if it was running
+      const savedStartTime = localStorage.getItem('motor_start_time');
+      if (savedStartTime) {
+        updateMotorState(true);
+      }
+
+      // Auto-connect on page load
+      connectMQTT();
+    });
 
     // ── MQTT SUBSCRIBED TOPICS ────────────────────────────────
     function getMqttTopics() {
@@ -958,81 +948,81 @@
     }
 
     function connectMQTT() {
-      const host = document.getElementById('mqttHost').value.trim();
-      const proto = document.getElementById('mqttProto').value;
-      const port = document.getElementById('mqttPort').value.trim();
-      const username = document.getElementById('mqttUser').value.trim();
-      const password = document.getElementById('mqttPass').value.trim();
+      const host = document.getElementById('mqttHost').value.trim() || 'portal.iotoria.web.id';
+      const token = document.getElementById('mqttToken').value.trim();
+      const prefix = document.getElementById('mqttTopicPrefix').value.trim() || 'rosyid';
 
       // Save to localStorage
       localStorage.setItem('mqtt_host', host);
-      localStorage.setItem('mqtt_proto', proto);
-      localStorage.setItem('mqtt_port', port);
-      localStorage.setItem('mqtt_user', username);
-      localStorage.setItem('mqtt_pass', password);
-      localStorage.setItem('mqtt_topic_prefix', document.getElementById('mqttTopicPrefix').value.trim());
+      localStorage.setItem('mqtt_token', token);
+      localStorage.setItem('mqtt_topic_prefix', prefix);
 
       const connBtn = document.getElementById('btnConnect');
       connBtn.disabled = true;
       connBtn.textContent = "Connecting...";
 
-      // Embed username and password in connection URL for basic HTTP authentication during WebSocket handshake
-      const wsUrl = (username && password)
-        ? `${proto}://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/mqtt`
-        : `${proto}://${host}:${port}/mqtt`;
-      
-      // Mask password for display logs
-      const displayUrl = username
-        ? `${proto}://${username}:••••••••@${host}:${port}/mqtt`
-        : `${proto}://${host}:${port}/mqtt`;
-      
-      addLog('sys', `Menghubungkan ke ${displayUrl} ...`);
+      // Ensure host has protocol
+      let url = host;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      url = url.replace(/\/$/, '');
+
+      addLog('sys', `Menghubungkan ke Portal ${url} via Socket.IO...`);
 
       const options = {
-        username: username,
-        password: password,
-        clientId: 'iotoria_web_' + Math.random().toString(16).substring(2, 10),
-        keepalive: 60,
-        reconnectPeriod: 1000,
-        connectTimeout: 5000,
-        clean: true
+        transports: ['polling', 'websocket']
       };
 
+      if (token) {
+        options.auth = { token: token };
+      }
+
       try {
-        mqttClient = mqtt.connect(wsUrl, options);
+        mqttClient = io(url, options);
 
         mqttClient.on('connect', () => {
           isConnected = true;
           updateConnUI(true);
-          addLog('mqtt', 'Berhasil Terhubung ke Broker MQTT.');
+          addLog('sys', 'Berhasil Terhubung ke Portal IoToria.');
 
+          // Subscribe to all control topics by emitting 'join_topic'
           const topics = getMqttTopics();
-          mqttClient.subscribe([topics.suhu, topics.motor, topics.threshold, topics.status, topics.alert], (err) => {
-            if (!err) {
-              addLog('mqtt', 'Subscribed ke semua topic kontrol.');
-            } else {
-              addLog('alert', 'Gagal subscribe ke topic kontrol.');
-            }
-          });
+          mqttClient.emit('join_topic', topics.suhu);
+          mqttClient.emit('join_topic', topics.motor);
+          mqttClient.emit('join_topic', topics.threshold);
+          mqttClient.emit('join_topic', topics.status);
+          mqttClient.emit('join_topic', topics.alert);
+          
+          addLog('sys', `Subscribed ke topic: ${prefix}/*`);
 
           // Enable controls
           document.getElementById('thresholdSlider').disabled = false;
           updateButtonStates();
         });
 
-        mqttClient.on('message', (topic, payload) => {
-          handleIncomingMessage(topic, payload.toString());
+        // Listen for mqtt_data event from Socket.IO server
+        mqttClient.on('mqtt_data', (data) => {
+          if (data && data.topic) {
+            handleIncomingMessage(data.topic, data.value);
+          }
         });
 
         mqttClient.on('error', (err) => {
           console.error(err);
-          addLog('alert', 'Koneksi error: ' + err.message);
+          addLog('alert', 'Koneksi error: ' + (err.message || err));
           disconnectMQTT();
         });
 
-        mqttClient.on('close', () => {
+        mqttClient.on('connect_error', (err) => {
+          console.error(err);
+          addLog('alert', 'Gagal menghubungkan: ' + err.message);
+          disconnectMQTT();
+        });
+
+        mqttClient.on('disconnect', (reason) => {
           if (isConnected) {
-            addLog('sys', 'Koneksi terputus dengan broker.');
+            addLog('sys', 'Koneksi terputus: ' + reason);
             disconnectMQTT();
           }
         });
@@ -1046,7 +1036,7 @@
     function disconnectMQTT() {
       if (mqttClient) {
         try {
-          mqttClient.end();
+          mqttClient.disconnect();
         } catch(e){}
         mqttClient = null;
       }
@@ -1057,7 +1047,7 @@
       document.getElementById('thresholdSlider').disabled = true;
       document.getElementById('btnActionMotor').disabled = true;
       stopUptime();
-      addLog('sys', 'Koneksi diputus secara manual.');
+      addLog('sys', 'Koneksi diputus.');
     }
 
     function updateConnUI(connected) {
@@ -1074,7 +1064,7 @@
       } else {
         badge.classList.remove('connected');
         text.textContent = 'Disconnected';
-        btn.textContent = 'Koneksikan ke Broker';
+        btn.textContent = 'Koneksikan ke Portal';
         btn.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)';
         btn.style.color = '#0d1527';
       }
@@ -1151,6 +1141,11 @@
         gauge.style.stroke = 'var(--success)';
       }
 
+      // Local AUTO mode backup logic
+      if (systemMode === 'AUTO') {
+        updateMotorState(val < threshold);
+      }
+
       updateGapInfo();
       appendChartData(val);
     }
@@ -1173,6 +1168,7 @@
 
     // ── MOTOR STATE CONTROL ──────────────────────────────────
     function updateMotorState(on) {
+      if (motorOn === on) return;
       motorOn = on;
       const fan = document.getElementById('fanIndicator');
       const text = document.getElementById('motorStateText');
@@ -1183,32 +1179,79 @@
         text.textContent = "STATUS: RUNNING";
         text.classList.add('active');
         btn.textContent = "Matikan Motor";
-        if (!motorStartTime) {
-          motorStartTime = Date.now();
-          startUptime();
+        
+        // Restore start time from localStorage or save a new one
+        let savedStartTime = localStorage.getItem('motor_start_time');
+        if (!savedStartTime) {
+          savedStartTime = Date.now().toString();
+          localStorage.setItem('motor_start_time', savedStartTime);
         }
+        motorStartTime = parseInt(savedStartTime);
+        startUptime();
+        
         addLog('motor', 'Motor berputar (ON).');
       } else {
         fan.classList.remove('active');
         text.textContent = "STATUS: OFF";
         text.classList.remove('active');
         btn.textContent = "Nyalakan Motor";
+        
+        // Remove start time from localStorage when motor is turned OFF
+        localStorage.removeItem('motor_start_time');
         stopUptime();
         addLog('motor', 'Motor dinonaktifkan (OFF).');
       }
+    }
+
+    function publishMQTT(topic, message) {
+      const token = document.getElementById('mqttToken').value.trim();
+      const host = document.getElementById('mqttHost').value.trim() || 'portal.iotoria.web.id';
+      
+      if (!token) {
+        addLog('alert', 'Error: Auth Token JWT diperlukan untuk mengirim perintah!');
+        return;
+      }
+
+      let url = host;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      url = url.replace(/\/$/, '');
+
+      fetch(`${url}/api/mqtt/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          topic: topic,
+          message: message.toString(),
+          qos: 1
+        })
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('HTTP status ' + res.status);
+        }
+        addLog('mqtt', `Mengirim perintah ke ${topic} → ${message}`);
+      })
+      .catch(err => {
+        addLog('alert', `Gagal mengirim perintah: ${err.message}`);
+      });
     }
 
     function toggleMotor() {
       if (!isConnected) return;
       const topics = getMqttTopics();
       const nextState = motorOn ? 'OFF' : 'ON';
-      mqttClient.publish(topics.motor, nextState);
-      addLog('mqtt', `Mengirim perintah manual: Motor ${nextState}`);
+      publishMQTT(topics.motor, nextState);
     }
 
     // ── MODE STATE CONTROL (AUTO / MANUAL) ───────────────────
     function updateSystemMode(mode) {
       systemMode = mode;
+      localStorage.setItem('system_mode', mode);
       const autoBtn = document.getElementById('btnModeAuto');
       const manualBtn = document.getElementById('btnModeManual');
 
@@ -1216,6 +1259,11 @@
         autoBtn.classList.add('active');
         manualBtn.classList.remove('active');
         addLog('sys', 'Sistem berjalan di Mode: AUTO');
+        
+        // If temperature is known, evaluate motor state immediately
+        if (currentTemp !== null) {
+          updateMotorState(currentTemp < threshold);
+        }
       } else {
         autoBtn.classList.remove('active');
         manualBtn.classList.add('active');
@@ -1228,13 +1276,11 @@
       if (!isConnected) return;
       const topics = getMqttTopics();
       if (mode === 'AUTO') {
-        mqttClient.publish(topics.motor, 'AUTO');
-        addLog('mqtt', 'Mengirim perintah: Alihkan Mode ke AUTO');
+        publishMQTT(topics.motor, 'AUTO');
       } else {
         // Switching to manual keeps current motor state explicitly
         const currentState = motorOn ? 'ON' : 'OFF';
-        mqttClient.publish(topics.motor, currentState);
-        addLog('mqtt', `Mengirim perintah: Alihkan ke MANUAL (${currentState})`);
+        publishMQTT(topics.motor, currentState);
       }
     }
 
@@ -1250,10 +1296,17 @@
     // ── THRESHOLD SLIDER CONTROLLER ──────────────────────────
     function changeThreshold(value) {
       document.getElementById('thresholdNum').textContent = value;
+      threshold = parseFloat(value);
+      
+      // If in AUTO mode, evaluate motor state immediately
+      if (systemMode === 'AUTO' && currentTemp !== null) {
+        updateMotorState(currentTemp < threshold);
+      }
+      
       if (!isConnected) return;
       
       const topics = getMqttTopics();
-      mqttClient.publish(topics.threshold, value.toString(), { retain: true });
+      publishMQTT(topics.threshold, value.toString());
     }
 
     // ── ALERTS NOTIFICATION ──────────────────────────────────
@@ -1275,20 +1328,37 @@
 
     // ── UPTIME TIMER ─────────────────────────────────────────
     function startUptime() {
-      stopUptime();
-      uptimeTimer = setInterval(() => {
-        if (!motorStartTime) return;
-        const elapsed = Math.floor((Date.now() - motorStartTime) / 1000);
-        const mins = Math.floor(elapsed / 60);
-        const secs = elapsed % 60;
+      if (uptimeTimer) {
+        clearInterval(uptimeTimer);
+      }
+      updateUptimeUI();
+      uptimeTimer = setInterval(updateUptimeUI, 1000);
+    }
+
+    function updateUptimeUI() {
+      if (!motorStartTime) return;
+      const elapsed = Math.floor((Date.now() - motorStartTime) / 1000);
+      const hours = Math.floor(elapsed / 3600);
+      const mins = Math.floor((elapsed % 3600) / 60);
+      const secs = elapsed % 60;
+      
+      if (hours > 0) {
         document.getElementById('uptime').textContent = 
-          String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-      }, 1000);
+          String(hours).padStart(2, '0') + ':' + 
+          String(mins).padStart(2, '0') + ':' + 
+          String(secs).padStart(2, '0');
+      } else {
+        document.getElementById('uptime').textContent = 
+          String(mins).padStart(2, '0') + ':' + 
+          String(secs).padStart(2, '0');
+      }
     }
 
     function stopUptime() {
-      clearInterval(uptimeTimer);
-      uptimeTimer = null;
+      if (uptimeTimer) {
+        clearInterval(uptimeTimer);
+        uptimeTimer = null;
+      }
       motorStartTime = null;
       document.getElementById('uptime').textContent = '--:--';
     }
