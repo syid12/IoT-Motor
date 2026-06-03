@@ -1109,7 +1109,7 @@
                 style="font-size: 14px; color: var(--text-muted);">°C</span></div>
           </div>
           <input type="range" class="custom-range" id="thresholdSlider" min="20" max="80" value="30"
-            oninput="changeThreshold(this.value)" disabled>
+            oninput="changeThreshold(this.value, false)" onchange="changeThreshold(this.value, true)" disabled>
           <div class="slider-labels">
             <span>20°C</span>
             <span>50°C</span>
@@ -1624,7 +1624,7 @@
     }
 
     // ── THRESHOLD SLIDER CONTROLLER ──────────────────────────
-    function changeThreshold(value) {
+    function changeThreshold(value, publish = true) {
       document.getElementById('thresholdNum').textContent = value;
       threshold = parseFloat(value);
 
@@ -1633,7 +1633,7 @@
         updateMotorState(currentTemp < threshold);
       }
 
-      if (!isConnected) return;
+      if (!publish || !isConnected) return;
 
       const topics = getMqttTopics();
       publishMQTT(topics.threshold, value.toString());
